@@ -137,8 +137,10 @@ export const deleteProductController = async (req, res) => {
 
 export const updateProductController = async (req, res) => {
   try {
-    const { name, description, price, category, quantity, shipping, photo } =
-      req.fields;
+
+    const { name, description, price, category, quantity, shipping } =
+    req.fields;
+    const { photo } = req.files;
     switch (true) {
       case !name:
         return res.status(500).send({ error: "Name is Required" });
@@ -150,17 +152,24 @@ export const updateProductController = async (req, res) => {
         return res.status(500).send({ error: "Category is Required" });
       case !quantity:
         return res.status(500).send({ error: "Quantity is Required" });
-      case !photo:
-        return res.status(500).send({ error: "Photo URL is Required" });
     }
 
-    const products = await productModel.findByIdAndUpdate(
+    const updateData = { ...req.fields, slug: slugify(name) };
+
+    // Add photo data ONLY if the admin uploaded a file
+    if (photo) {
+      updateData.photo = {
+        data: fs.readFileSync(photo.path),
+        contentType: photo.type,
+      };
+    }
+
+     const products = await productModel.findByIdAndUpdate(
       req.params.pid,
-      { ...req.fields, slug: slugify(name) },
+      updateData, 
       { new: true }
     );
-    
-    await products.save();
+      
     res.status(201).send({
       success: true,
       message: "Product Updated Successfully",

@@ -42,7 +42,7 @@ const productSchema = new mongoose.Schema(
     size: {
       type: String,
       enum: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-      default: 'M'
+      default: undefined
     },
     reviews: [{
       user: {

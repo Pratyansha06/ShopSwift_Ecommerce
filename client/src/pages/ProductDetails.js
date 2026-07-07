@@ -66,7 +66,9 @@ const ProductDetails = () => {
             })}
           </h6>
           <h6>Category : {product?.category?.name}</h6>
-          <h6>Size : {product?.size}</h6>
+          {product?.size && (
+          <h6>Size : {product.size}</h6>
+           )}
           <button
             className="btn btn-secondary ms-1"
             onClick={() => {

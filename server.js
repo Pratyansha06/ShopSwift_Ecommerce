@@ -2,11 +2,16 @@ import express from "express";
 import colors from "colors";
 import dotenv from "dotenv";
 import morgan from "morgan";
+import path from "path";
+import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoute.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import cors from "cors";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 dotenv.config();
@@ -182,11 +187,9 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/category", cacheMiddleware(180000), categoryRoutes);
 app.use("/api/v1/product", cacheMiddleware(300000), productRoutes);
 
-
-app.get("/", (req, res) => {
-  res.send("<h1>Welcome to ecommerce app</h1>");
-});
-
+// Serve React build in production (single Render URL)
+const clientBuildPath = path.join(__dirname, "client", "build");
+app.use(express.static(clientBuildPath));
 
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
@@ -226,11 +229,17 @@ app.use((err, req, res, next) => {
 
 
 app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found',
-    path: req.originalUrl
-  });
+  // API 404
+  if (req.originalUrl.startsWith("/api/")) {
+    return res.status(404).json({
+      success: false,
+      message: 'Route not found',
+      path: req.originalUrl
+    });
+  }
+
+  // React Router fallback (SPA)
+  return res.sendFile(path.join(clientBuildPath, "index.html"));
 });
 
 const PORT = process.env.PORT || 8080;
